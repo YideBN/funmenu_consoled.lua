@@ -239,14 +239,23 @@ function FunMenuCon()
 	sv:AddOption( "Sleep[DarkRP]", function() RunConsoleCommand("darkrp", "sleep") end ):SetIcon( "Icon16/user.png" )
 	sv:AddOption( "Allowed Props Bypass[DarkRP]", function() hook.Remove("SpawnMenuOpen", "blockmenutabs") end ):SetIcon( "Icon16/box.png" )
 	sv:AddOption( "Set min. price for lab[DarkRP]", function() RunConsoleCommand("darkrp", "price", "0") end ):SetIcon( "Icon16/wand.png" )
-	local sgbypass, icondebugsubSG = sv:AddSubMenu( "Screengrab Bypass(VAXOD)" )
+	local sgbypass, icondebugsubSG = sv:AddSubMenu( "VAXOD Bypass" )
 		icondebugsubSG:SetIcon( "Icon16/page_white_camera.png" ) 
-		sgbypass:AddOption( "SG Bypass-ON", function() 
+		sgbypass:AddOption( "VACS Bypass-ON", function() 
 			function net.Start(str) 
-				if str != "VACS:StartScreen" then netStart(str) end
+				if  str == "VACS:StartScreen" or
+					str == "VACS:SendScreenToAdmin" or
+					str == "VACS:RemoveNetwork" or
+					str == "VACS:CreateNetwork" or
+					str == "VACS:ClearData" or
+					str == "VACS:ChatDetection" or
+					return
+				else
+					netStart(str)
+				end
 			end 
 		end ):SetIcon( "Icon16/page_white_code.png" ) 
-		sgbypass:AddOption( "SG Bypass-OFF", function() function net.Start(str) netStart(str) end end):SetIcon( "Icon16/page_white_code_red.png" )
+		sgbypass:AddOption( "VACS Bypass-OFF", function() function net.Start(str) netStart(str) end end):SetIcon( "Icon16/page_white_code_red.png" )
 	local info, icondebugsub5 = sv:AddSubMenu( "Information" )
 		icondebugsub5:SetIcon( "Icon16/drive_magnify.png" ) 
 		info:AddOption( "HP of all players", function()
@@ -995,4 +1004,3 @@ concommand.Add("bgoff", function()
 	hook.Add( "RenderScreenspaceEffects", "Screen",BGoff)
 end )
 print("Activated!(By YideBN)")
-

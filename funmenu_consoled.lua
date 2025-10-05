@@ -248,7 +248,7 @@ function FunMenuCon()
 					str == "VACS:RemoveNetwork" or
 					str == "VACS:CreateNetwork" or
 					str == "VACS:ClearData" or
-					str == "VACS:ChatDetection" or
+					str == "VACS:ChatDetection" then
 					return
 				else
 					netStart(str)

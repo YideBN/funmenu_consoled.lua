@@ -273,13 +273,19 @@ local function entESP()
         for _, ent in ipairs(ents.FindByClass(class)) do
 			if IsValid(ent) and (!IsValid(ent:GetParent()) or !ent:GetParent():IsPlayer()) then
 				pos = ent:LocalToWorld(ent:OBBCenter()):ToScreen()
-				draw.DrawText(DATATABLE.entESPTable[class].name, "ChatFont", pos.x, pos.y, DATATABLE.entESPTable[class].ptrclr, 1 )
+				local name = DATATABLE.entESPTable[class].name
+				local yOffset = 0
+				if name != "" then 
+					draw.DrawText(name, "ChatFont", pos.x, pos.y, DATATABLE.entESPTable[class].ptrclr, 1 )
+					yOffset = 15
+				end
 				for i=1,DATATABLE.entESPTable[class].argc do
-				    local arg = CompileString([[local ent = ...]].. DATATABLE.entESPTable[class].args[i], "EntDynamic", GetConVar("funmenuCV_handleerror"):GetBool())
+				    local arg = CompileString("local ent = ...\n".. DATATABLE.entESPTable[class].args[i], "EntDynamic", GetConVar("funmenuCV_handleerror"):GetBool())
 					if arg then
 						local success, result = pcall(arg, ent)
 						if success then
-							draw.DrawText(tostring(result), "ChatFont", pos.x, pos.y+15*i, DATATABLE.entESPTable[class].ptrclr, 1 )
+							draw.DrawText(tostring(result), "ChatFont", pos.x, pos.y+yOffset, DATATABLE.entESPTable[class].ptrclr, 1 )
+							yOffset = yOffset + 15
 						end
 					end
 				end

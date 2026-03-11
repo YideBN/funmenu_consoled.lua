@@ -756,7 +756,7 @@ local function EntsList()
 	argcNumSlider:SetDecimals( 0 )
 	argcNumSlider:SetValue(argc)
 	argcNumSlider.OnValueChanged = function(_,val)
-		argc = val
+		argc = math.floor(val)
 		argclistUpdate()
 	end
 	

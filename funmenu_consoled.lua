@@ -53,6 +53,9 @@ local function GetClearData()
 	for k, v in pairs(retTable.CLRTable) do
         v.ptrclr = nil
     end
+	for k, v in pairs(retTable.entESPTable) do
+        v.ptrclr = nil
+    end
 	return retTable
 end
 
@@ -64,21 +67,24 @@ local entESPBTable = {"player", "worldspawn"}
 
 --<<=====================================================================Hooks start here=====================================================================>>
 
-
-hook.Remove( "Think", "RGBRC")
-hook.Add( "Think", "RGBRC", function() 
-	local rgb=HSVToColor(CurTime()% 6*60,1,1) 
-	for k,v in pairs(DATATABLE.CLRTable) do
+local function RGBControl(rgb, tbl)
+	for k,v in pairs(tbl) do
 		if !v.rgb then
-			DATATABLE.CLRTable[k].ptrclr = DATATABLE.CLRTable[k].clr
+			tbl[k].ptrclr = tbl[k].clr
 		else
 			if !v.rgbrevert then
-				DATATABLE.CLRTable[k].ptrclr = Color(rgb.r, rgb.g, rgb.b, DATATABLE.CLRTable[k].clr.a)
+				tbl[k].ptrclr = Color(rgb.r, rgb.g, rgb.b, tbl[k].clr.a)
 			else
-				DATATABLE.CLRTable[k].ptrclr = Color(255-rgb.r, 255-rgb.g, 255-rgb.b, DATATABLE.CLRTable[k].clr.a)
+				tbl[k].ptrclr = Color(255-rgb.r, 255-rgb.g, 255-rgb.b, tbl[k].clr.a)
 			end
 		end
 	end
+end
+hook.Remove( "Think", "RGBRC")
+hook.Add( "Think", "RGBRC", function() 
+	local rgb=HSVToColor(CurTime()% 6*60,1,1)
+	RGBControl(rgb, DATATABLE.CLRTable)
+	RGBControl(rgb, DATATABLE.entESPTable)
 end)
 
 
@@ -95,13 +101,15 @@ local function RemoveENTESP(class)
 	return false
 end
 
-local function EditENTESP(class, name, clr, argc, args)
+local function EditENTESP(class, name, clr, argc, args, rgb, rgbrevert)
 	if DATATABLE.entESPTable[class] then
 		DATATABLE.entESPTable[class] = {
 			name = name or "Unnamed", 
 			clr = clr or Color(0,255,255,255),
 			argc = argc or 0,
-			args = args or {}
+			args = args or {},
+			rgb = rgb or false,
+			rgbrevert = rgbrevert or false
 		}
 		chat.AddText(Color(0, 191.25, 255), "[✓]Entity \"".. class.. "\" has been updated in the entities list.")
 		return true
@@ -111,14 +119,16 @@ local function EditENTESP(class, name, clr, argc, args)
 	return false
 end
 
-local function AddENTESP(class, name, clr, argc, args)
+local function AddENTESP(class, name, clr, argc, args, rgb, rgbrevert)
 	if !DATATABLE.entESPTable[class] then
 		if !table.HasValue(entESPBTable, class) then
 			DATATABLE.entESPTable[class] = {
 				name = name or "Unnamed", 
 				clr = clr or Color(0,255,255,255),
 				argc = argc or 0,
-				args = args or {}
+				args = args or {},
+				rgb = rgb or false,
+				rgbrevert = rgbrevert or false
 			}
 			chat.AddText(Color(0, 191.25, 255), "[✓]Entity \"".. class.. "\" has been added to the entities list.")
 			return true
@@ -263,13 +273,13 @@ local function entESP()
         for _, ent in ipairs(ents.FindByClass(class)) do
 			if IsValid(ent) and (!IsValid(ent:GetParent()) or !ent:GetParent():IsPlayer()) then
 				pos = ent:LocalToWorld(ent:OBBCenter()):ToScreen()
-				draw.DrawText(DATATABLE.entESPTable[class].name, "ChatFont", pos.x, pos.y, DATATABLE.entESPTable[class].clr, 1 )
+				draw.DrawText(DATATABLE.entESPTable[class].name, "ChatFont", pos.x, pos.y, DATATABLE.entESPTable[class].ptrclr, 1 )
 				for i=1,DATATABLE.entESPTable[class].argc do
 				    local arg = CompileString(DATATABLE.entESPTable[class].args[i], "EntDynamic", GetConVar("funmenuCV_handleerror"):GetBool())
 					if arg then
 						local success, result = pcall(arg, ent)
 						if success then
-							draw.DrawText(arg(ent), "ChatFont", pos.x, pos.y+15*i, DATATABLE.entESPTable[class].clr, 1 )
+							draw.DrawText(arg(ent), "ChatFont", pos.x, pos.y+15*i, DATATABLE.entESPTable[class].ptrclr, 1 )
 						end
 					end
 				end
@@ -283,7 +293,7 @@ local function entESPW()
         for _, ent in ipairs(ents.FindByClass(class)) do
 			if IsValid(ent) and (!IsValid(ent:GetParent()) or !ent:GetParent():IsPlayer()) then
 				local mins, maxs = ent:GetCollisionBounds()
-				render.DrawWireframeBox(ent:GetPos(), ent:GetAngles(), mins, maxs, DATATABLE.entESPTable[class].clr, false)
+				render.DrawWireframeBox(ent:GetPos(), ent:GetAngles(), mins, maxs, DATATABLE.entESPTable[class].ptrclr, false)
 			end
         end
     end
@@ -496,7 +506,7 @@ local function settings()
 	local checkboxrgbrevert = vgui.Create( "DCheckBoxLabel", DermaFrame )
 	checkboxrgbrevert:SetPos( 100, 355 )
 	checkboxrgbrevert:SetText( "RGB Revert" )
-	checkboxrgbrevert:SetValue(DATATABLE.CLRTable[clr].rgb)
+	checkboxrgbrevert:SetValue(DATATABLE.CLRTable[clr].rgbrevert)
 	checkboxrgbrevert.OnChange = function(_--[[panel]], val)
 		DATATABLE.CLRTable[clr].rgbrevert = val
 	end
@@ -513,6 +523,7 @@ local function settings()
 		clr = txt
 		Mixerclr:SetColor(DATATABLE.CLRTable[txt].clr)
 		checkboxrgb:SetValue(DATATABLE.CLRTable[txt].rgb)
+		checkboxrgbrevert:SetValue(DATATABLE.CLRTable[txt].rgbrevert)
 	end
 	
 	
@@ -598,6 +609,7 @@ end
 local function EntsList()
 	local class = util.TraceLine(util.GetPlayerTrace(fply)).Entity:GetClass()
 	local data = DATATABLE.entESPTable[class] or {}
+	class = table.HasValue(entESPBTable, class) and "" or class
 	
 	local argc = 0
 	local args = {}
@@ -633,17 +645,30 @@ local function EntsList()
 	Mixerclr:SetWangs(true) 				
 	Mixerclr:SetColor(Color(255,255,255,255))
 	
+	local checkboxrgb = vgui.Create( "DCheckBoxLabel", DermaFrame )
+	checkboxrgb:SetPos( 215, 135 )
+	checkboxrgb:SetText( "RGB" )
+	checkboxrgb:SetValue(false)
+	
+	local checkboxrgbrevert = vgui.Create( "DCheckBoxLabel", DermaFrame )
+	checkboxrgbrevert:SetPos( 215, 155 )
+	checkboxrgbrevert:SetText( "  RGB\nRevert" )
+	checkboxrgbrevert:SetValue(false)
+	
 	local textclass = vgui.Create( "DLabel", DermaFrame )
 	textclass:SetPos( 10, 275 )
 	textclass:SetText( "Class" )
 	local ClassTextEntry = vgui.Create( "DTextEntry", DermaFrame )	
 	ClassTextEntry:SetPos( 40,275 )	
 	ClassTextEntry:SetSize( 240,20 )
-	ClassTextEntry:SetText(table.HasValue(entESPBTable, class) and "" or class)	
+	ClassTextEntry:SetText(class)	
 	ClassTextEntry:SetMultiline( false )	
 	ClassTextEntry:SetEditable( true )	
 	ClassTextEntry:SetAllowNonAsciiCharacters( true )	
-	ClassTextEntry:SetEnterAllowed( false )	
+	ClassTextEntry:SetEnterAllowed( false )
+	ClassTextEntry.OnChange = function()
+		class = ClassTextEntry:GetText()
+	end
 	local textname = vgui.Create( "DLabel", DermaFrame )
 	textname:SetPos( 10, 300 )
 	textname:SetText( "Name" )
@@ -681,7 +706,7 @@ local function EntsList()
 		local class = ClassTextEntry:GetText()
 		local name = NameTextEntry:GetText()
 		if class != "" then 
-			AddENTESP(class, name, Mixerclr:GetColor(), argc, args)
+			AddENTESP(class, name, Mixerclr:GetColor(), argc, args, checkboxrgb:GetChecked(), checkboxrgbrevert:GetChecked())
 			UpdateESPENTLIST()
 		end
 	end
@@ -693,7 +718,7 @@ local function EntsList()
 		local class = ClassTextEntry:GetText()
 		local name = NameTextEntry:GetText()
 		if class != "" then 
-			EditENTESP(class, name, Mixerclr:GetColor(), argc, args)
+			EditENTESP(class, name, Mixerclr:GetColor(), argc, args, checkboxrgb:GetChecked(), checkboxrgbrevert:GetChecked())
 			UpdateESPENTLIST()
 		end
 	end
@@ -774,6 +799,9 @@ local function EntsList()
 		NameTextEntry:SetText(data.name or "")
 		Mixerclr:SetColor(data.clr or Color(255,255,255,255))
 		argcNumSlider:SetValue(argc)
+		
+		checkboxrgb:SetValue(data.rgb or false)
+		checkboxrgbrevert:SetValue(data.rgbrevert or false)
 		
 		argTextEntry:SetText("")
 		argTextEntry:SetEditable( false )

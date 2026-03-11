@@ -275,11 +275,11 @@ local function entESP()
 				pos = ent:LocalToWorld(ent:OBBCenter()):ToScreen()
 				draw.DrawText(DATATABLE.entESPTable[class].name, "ChatFont", pos.x, pos.y, DATATABLE.entESPTable[class].ptrclr, 1 )
 				for i=1,DATATABLE.entESPTable[class].argc do
-				    local arg = CompileString(DATATABLE.entESPTable[class].args[i], "EntDynamic", GetConVar("funmenuCV_handleerror"):GetBool())
+				    local arg = CompileString([[local ent = ...]].. DATATABLE.entESPTable[class].args[i], "EntDynamic", GetConVar("funmenuCV_handleerror"):GetBool())
 					if arg then
 						local success, result = pcall(arg, ent)
 						if success then
-							draw.DrawText(arg(ent), "ChatFont", pos.x, pos.y+15*i, DATATABLE.entESPTable[class].ptrclr, 1 )
+							draw.DrawText(tostring(result), "ChatFont", pos.x, pos.y+15*i, DATATABLE.entESPTable[class].ptrclr, 1 )
 						end
 					end
 				end
